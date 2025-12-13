@@ -3,16 +3,20 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { stripe, getTierByPriceId } from '@/lib/stripe';
 
+// Lazy initialization helper for Polygon client
+// This prevents build crashes by deferring client instantiation until runtime
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getPolygonClient() {
+  const apiKey = process.env.POLYGON_API_KEY;
+  if (!apiKey) {
+    throw new Error("POLYGON_API_KEY is not set");
+  }
+  // When Polygon integration is needed: return new restClient(apiKey);
+  return null; // Placeholder until Polygon integration is implemented
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // Defensive check for Polygon API key
-    const apiKey = process.env.POLYGON_API_KEY;
-    if (!apiKey) {
-      throw new Error("POLYGON_API_KEY is not set");
-    }
-    // Note: Polygon client would be instantiated here when needed
-    // const client = new restClient(apiKey);
-    
     const { priceId } = await req.json();
 
     if (!priceId) {
