@@ -1,36 +1,159 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Profit Pulse
+
+**Stop overthinking. Start building.**
+
+The only idea evaluation tool that tells you why ideas like yours fail — and how to avoid it.
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/5c798f4b-5f16-4457-8783-c7adc4d0a7a1/deploy-status)](https://app.netlify.com/sites/profit-pulse-app/deploys)
+
+## Overview
+
+Profit Pulse is a business idea evaluation framework that helps founders cut through shiny object syndrome. It uses the **QPV Matrix** (Quickness, Profitability, Validation Ease) to score ideas and predict failure modes based on historical patterns.
+
+### Features
+
+- **Free QPV Calculator** — Weighted scoring (Q×40% + P×30% + V×30%) with instant interpretation
+- **Multi-Layer Evaluation** — 4-layer analysis covering founder readiness, idea characteristics, historical patterns, and contextual viability
+- **Failure Mode Detection** — Category-specific failure rates and mitigation strategies
+- **Execution Blueprints** — Actionable plans with validation checkpoints
+
+### Pricing Tiers
+
+| Tier | Price | Features |
+|------|-------|----------|
+| Free QPV | $0 | Quick score, instant results, no signup |
+| Starter | $9 | 1 full evaluation, 1 blueprint, failure analysis |
+| Explorer | $29 | 5 evaluations, 2 blueprints, comparison tools |
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **Styling**: Tailwind CSS 4
+- **Database**: PostgreSQL via Prisma ORM
+- **Auth**: NextAuth.js
+- **Payments**: Stripe
+- **Deployment**: Netlify
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- PostgreSQL database (local or cloud)
+- Stripe account (for payments)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone https://github.com/Tangent-Forge/profit-pulse.git
+cd profit-pulse
+
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npx prisma generate
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your credentials
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/profit_pulse"
 
-## Learn More
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key"
 
-To learn more about Next.js, take a look at the following resources:
+# Stripe
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Start development server
+npm run dev
 
-## Deploy on Vercel
+# Run database migrations
+npx prisma migrate dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Open Prisma Studio (database GUI)
+npx prisma studio
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   │   ├── auth/          # NextAuth endpoints
+│   │   ├── checkout/      # Stripe checkout
+│   │   └── webhook/       # Stripe webhooks
+│   ├── dashboard/         # User dashboard
+│   ├── evaluate/          # QPV Calculator
+│   └── success/           # Payment success
+├── lib/                   # Utilities
+│   ├── calculations.ts    # QPV scoring engine
+│   ├── failureModes.ts    # Category failure data
+│   ├── auth.ts            # NextAuth config
+│   ├── db.ts              # Prisma client
+│   └── stripe.ts          # Stripe config
+├── types/                 # TypeScript definitions
+└── prisma/
+    └── schema.prisma      # Database schema
+```
+
+## Deployment
+
+### Netlify (Recommended)
+
+The app is configured for Netlify deployment with the `@netlify/plugin-nextjs` plugin.
+
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Link to Netlify site
+netlify link
+
+# Deploy to production
+netlify deploy --prod
+```
+
+**Important**: The `prebuild` script automatically runs `prisma generate` before each build to ensure the Prisma client is up to date.
+
+### Environment Variables on Netlify
+
+Set these in **Site settings > Environment variables**:
+
+- `DATABASE_URL`
+- `NEXTAUTH_URL` (your production URL)
+- `NEXTAUTH_SECRET`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+
+## Related Projects
+
+Profit Pulse is part of the **Tangent Forge** product suite:
+
+- [PathFinder](https://github.com/Tangent-Forge/pathfinder) — Career path discovery
+- [Prompt Finder](https://github.com/Tangent-Forge/prompt-finder) — College essay coach
+- [Geo Finder](https://github.com/Tangent-Forge/geo-finder) — Location matching
+
+## License
+
+© 2025 Tangent Forge. All rights reserved.
