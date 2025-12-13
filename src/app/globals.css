@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  /* Tangent Forge Foundation */
+  --tf-charcoal: #2B2D31;
+  --tf-deep-charcoal: #1F1F23;
+  --tf-steel-gray: #3a3a3a;
+  
+  /* Tangent Forge Content */
+  --tf-white: #FFFFFF;
+  --tf-smoked-gray: #A8A8A8;
+  --tf-muted-steel: #6B6B6B;
+  
+  /* Tangent Forge Action */
+  --tf-forge-orange: #D96704;
+  --tf-ember-glow: #FF6C37;
+  
+  /* Utility Context (Copper - for Profit Pulse) */
+  --tf-dark-copper: #8B5A3C;
+  --tf-copper-sheen: #A67C52;
+  --tf-forged-bronze: #6B4423;
+  
+  /* Semantic States */
+  --tf-success: #2D7A3E;
+  --tf-success-glow: #3A9B50;
+  --tf-warning: #D97706;
+  --tf-warning-glow: #F59E0B;
+  --tf-error: #B91C1C;
+  --tf-error-glow: #DC2626;
+}
+
+@theme inline {
+  /* Tangent Forge Colors */
+  --color-tf-charcoal: var(--tf-charcoal);
+  --color-tf-deep-charcoal: var(--tf-deep-charcoal);
+  --color-tf-steel-gray: var(--tf-steel-gray);
+  --color-tf-white: var(--tf-white);
+  --color-tf-smoked-gray: var(--tf-smoked-gray);
+  --color-tf-muted-steel: var(--tf-muted-steel);
+  --color-tf-forge-orange: var(--tf-forge-orange);
+  --color-tf-ember-glow: var(--tf-ember-glow);
+  --color-tf-dark-copper: var(--tf-dark-copper);
+  --color-tf-copper-sheen: var(--tf-copper-sheen);
+  --color-tf-forged-bronze: var(--tf-forged-bronze);
+  --color-tf-success: var(--tf-success);
+  --color-tf-success-glow: var(--tf-success-glow);
+  --color-tf-warning: var(--tf-warning);
+  --color-tf-warning-glow: var(--tf-warning-glow);
+  --color-tf-error: var(--tf-error);
+  --color-tf-error-glow: var(--tf-error-glow);
+}
+
+body {
+  background: var(--tf-charcoal);
+  color: var(--tf-white);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom range slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--tf-steel-gray);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--tf-forge-orange);
+  cursor: pointer;
+  border: 2px solid var(--tf-white);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--tf-forge-orange);
+  cursor: pointer;
+  border: 2px solid var(--tf-white);
+}
