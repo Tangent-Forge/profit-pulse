@@ -5,6 +5,14 @@ import { stripe, getTierByPriceId } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
+    // Defensive check for Polygon API key
+    const apiKey = process.env.POLYGON_API_KEY;
+    if (!apiKey) {
+      throw new Error("POLYGON_API_KEY is not set");
+    }
+    // Note: Polygon client would be instantiated here when needed
+    // const client = new restClient(apiKey);
+    
     const { priceId } = await req.json();
 
     if (!priceId) {
