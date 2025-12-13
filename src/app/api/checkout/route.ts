@@ -5,6 +5,7 @@ import { stripe, getTierByPriceId } from '@/lib/stripe';
 
 // Lazy initialization helper for Polygon client
 // This prevents build crashes by deferring client instantiation until runtime
+// TODO: Integrate with Polygon.io API when stock/market data features are added
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getPolygonClient() {
   const apiKey = process.env.POLYGON_API_KEY;
