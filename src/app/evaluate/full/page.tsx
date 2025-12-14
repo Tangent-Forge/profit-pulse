@@ -5,7 +5,8 @@ import Link from 'next/link';
 import {
   Zap, TrendingUp, CheckCircle, ArrowRight, AlertCircle, ArrowLeft,
   User, Clock, DollarSign, Target, History, Calendar, Heart,
-  AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp
+  AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp,
+  Download, Save, Lightbulb, Copy, FileText
 } from 'lucide-react';
 import {
   FullEvaluationInput,
@@ -21,6 +22,8 @@ import {
   getCategoryDisplayName
 } from '@/lib/calculations';
 import { getAllCategories } from '@/lib/failureModes';
+import { generateImprovementSuggestions, calculatePotentialScore, generatePivotSuggestion, ImprovementSuggestion } from '@/lib/improvements';
+import { generateMarkdownExport, downloadFile } from '@/lib/export';
 
 const CATEGORIES = getAllCategories();
 
@@ -57,8 +60,14 @@ export default function FullEvaluatePage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     obstacles: true,
-    gaps: true
+    gaps: true,
+    improvements: true
   });
+  const [suggestions, setSuggestions] = useState<ImprovementSuggestion[]>([]);
+  const [pivotSuggestion, setPivotSuggestion] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const steps = [
     { id: 'basics', title: 'Idea Basics', icon: Target },
@@ -72,7 +81,56 @@ export default function FullEvaluatePage() {
     e.preventDefault();
     const evalResult = calculateFullEvaluation(formData);
     setResult(evalResult);
+    
+    // Generate improvement suggestions
+    const improvementSuggestions = generateImprovementSuggestions(formData, evalResult);
+    setSuggestions(improvementSuggestions);
+    
+    // Generate pivot suggestion for low-scoring ideas
+    const pivot = generatePivotSuggestion(formData, evalResult);
+    setPivotSuggestion(pivot);
+    
     setShowResult(true);
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.ideaName,
+          description: formData.description,
+          category: formData.category,
+          qpvScore: result.overallScore,
+          evaluation: { input: formData, result, suggestions },
+        }),
+      });
+      if (response.ok) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleExportMarkdown = () => {
+    if (!result) return;
+    const markdown = generateMarkdownExport(formData, result, suggestions);
+    downloadFile(markdown, `${formData.ideaName.replace(/[^a-z0-9]/gi, '-')}-evaluation.md`, 'text/markdown');
+  };
+
+  const handleCopyMarkdown = async () => {
+    if (!result) return;
+    const markdown = generateMarkdownExport(formData, result, suggestions);
+    await navigator.clipboard.writeText(markdown);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   const handleReset = () => {
@@ -177,7 +235,7 @@ export default function FullEvaluatePage() {
               </div>
 
               {/* Energy Filter */}
-              <div className="flex items-center justify-center gap-4 p-4 bg-[var(--tf-steel-gray)]/20 rounded-lg">
+              <div className="flex items-center justify-center gap-4 p-4 bg-[var(--tf-steel-gray)]/20 rounded-lg mb-6">
                 {getEnergyStatusIcon(result.energyFilterStatus)}
                 <div>
                   <span className="text-sm text-[var(--tf-muted-steel)]">Energy Filter: </span>
@@ -189,6 +247,32 @@ export default function FullEvaluatePage() {
                     {getEnergyStatusText(result.energyFilterStatus)}
                   </span>
                 </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3 justify-center">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--tf-steel-gray)] hover:bg-[var(--tf-deep-charcoal)] text-white rounded-lg transition-all disabled:opacity-50"
+                >
+                  <Save size={18} />
+                  {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save to Dashboard'}
+                </button>
+                <button
+                  onClick={handleExportMarkdown}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--tf-steel-gray)] hover:bg-[var(--tf-deep-charcoal)] text-white rounded-lg transition-all"
+                >
+                  <Download size={18} />
+                  Export Markdown
+                </button>
+                <button
+                  onClick={handleCopyMarkdown}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--tf-steel-gray)] hover:bg-[var(--tf-deep-charcoal)] text-white rounded-lg transition-all"
+                >
+                  <Copy size={18} />
+                  {copySuccess ? 'Copied!' : 'Copy Report'}
+                </button>
               </div>
             </div>
 
@@ -239,6 +323,60 @@ export default function FullEvaluatePage() {
                             <p className="text-sm text-[var(--tf-forge-orange)]">→ {gap.action}</p>
                           </div>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Improvement Suggestions */}
+            {suggestions.length > 0 && (
+              <div className="bg-gradient-to-br from-[var(--tf-forge-orange)]/10 to-[var(--tf-ember-glow)]/5 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-[var(--tf-forge-orange)]/30">
+                <button
+                  onClick={() => toggleSection('improvements')}
+                  className="w-full flex items-center justify-between text-xl font-bold text-white mb-4"
+                >
+                  <span className="flex items-center gap-2">
+                    <Lightbulb className="text-[var(--tf-forge-orange)]" size={24} />
+                    How to Improve Your Score
+                    {suggestions.length > 0 && (
+                      <span className="text-sm font-normal text-[var(--tf-muted-steel)]">
+                        (Potential: +{suggestions.reduce((sum, s) => sum + s.potentialScoreGain, 0).toFixed(1)} points)
+                      </span>
+                    )}
+                  </span>
+                  {expandedSections.improvements ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedSections.improvements && (
+                  <div className="space-y-4">
+                    {pivotSuggestion && (
+                      <div className="p-4 bg-[var(--tf-error-glow)]/10 border border-[var(--tf-error-glow)]/30 rounded-lg mb-4">
+                        <h4 className="font-bold text-[var(--tf-error-glow)] mb-2 flex items-center gap-2">
+                          <AlertTriangle size={18} />
+                          Consider a Pivot
+                        </h4>
+                        <p className="text-[var(--tf-smoked-gray)]">{pivotSuggestion}</p>
+                      </div>
+                    )}
+                    {suggestions.map((suggestion, i) => (
+                      <div key={i} className={`p-4 rounded-lg border-l-4 ${
+                        suggestion.priority === 'high' ? 'bg-[var(--tf-forge-orange)]/10 border-[var(--tf-forge-orange)]' :
+                        suggestion.priority === 'medium' ? 'bg-[var(--tf-copper-sheen)]/10 border-[var(--tf-copper-sheen)]' :
+                        'bg-[var(--tf-steel-gray)]/20 border-[var(--tf-muted-steel)]'
+                      }`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-bold text-white flex items-center gap-2">
+                            {suggestion.priority === 'high' ? '🔥' : suggestion.priority === 'medium' ? '⚡' : '💡'}
+                            {suggestion.title}
+                          </h4>
+                          <span className="text-xs px-2 py-1 rounded bg-[var(--tf-success-glow)]/20 text-[var(--tf-success-glow)]">
+                            +{suggestion.potentialScoreGain.toFixed(1)} pts
+                          </span>
+                        </div>
+                        <p className="text-sm text-[var(--tf-muted-steel)] mb-2">{suggestion.description}</p>
+                        <p className="text-sm text-[var(--tf-smoked-gray)] mb-2"><strong>Impact:</strong> {suggestion.impact}</p>
+                        <p className="text-sm text-[var(--tf-forge-orange)]">→ {suggestion.action}</p>
                       </div>
                     ))}
                   </div>
