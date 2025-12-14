@@ -71,8 +71,8 @@ const MODELS = {
     quality: 'llama-3.1-70b-versatile', // $0.59/$0.79 per 1M tokens
   },
   together: {
-    fast: 'meta-llama/Llama-3-8b-chat-hf',
-    quality: 'meta-llama/Llama-3-70b-chat-hf',
+    fast: 'Qwen/Qwen2.5-7B-Instruct-Turbo',
+    quality: 'Qwen/Qwen2.5-72B-Instruct-Turbo',
   },
 };
 
