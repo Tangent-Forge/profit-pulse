@@ -50,8 +50,18 @@ export async function POST(req: NextRequest) {
         userId: session?.user?.id || 'anonymous',
         evaluations: tier.credits.evaluations.toString(),
         blueprints: tier.credits.blueprints.toString(),
+        product: 'profit_pulse',
+        brand: 'tangent_forge',
       },
       customer_email: session?.user?.email || undefined,
+      // Enable promotion codes for testing
+      allow_promotion_codes: true,
+      // Enable invoice creation
+      invoice_creation: {
+        enabled: true,
+      },
+      // Expire session after 30 minutes
+      expires_at: Math.floor(Date.now() / 1000) + (30 * 60),
     });
 
     if (!checkoutSession.url) {

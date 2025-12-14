@@ -70,13 +70,20 @@ export default function Home() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex justify-center gap-3">
+          <nav className="flex justify-center gap-3 flex-wrap">
             <Link
               href="/evaluate"
               className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all bg-[var(--tf-forge-orange)] text-white shadow-lg hover:bg-[var(--tf-ember-glow)]"
             >
               <Zap size={20} />
-              Evaluate
+              Quick QPV
+            </Link>
+            <Link
+              href="/evaluate/full"
+              className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all bg-gradient-to-r from-[var(--tf-forged-bronze)] to-[var(--tf-dark-copper)] text-white shadow-lg hover:from-[var(--tf-dark-copper)] hover:to-[var(--tf-forged-bronze)]"
+            >
+              <Target size={20} />
+              Full Evaluation
             </Link>
             <Link
               href="/dashboard"
