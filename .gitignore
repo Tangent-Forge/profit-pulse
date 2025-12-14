@@ -48,3 +48,4 @@ next-env.d.ts
 *recovery*
 recovered/
 recup_dir*/
+env.netlify

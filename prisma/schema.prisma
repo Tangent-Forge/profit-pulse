@@ -6,11 +6,12 @@ generator client {
   output   = "../node_modules/.prisma/client"
 }
 
-// Database connection - uses PostgreSQL
-// For local development, you can use Docker or a cloud provider like Supabase
+// Database connection - uses Supabase PostgreSQL
+// Uses connection pooler for queries, direct connection for migrations
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // User model for authentication

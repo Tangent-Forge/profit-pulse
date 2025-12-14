@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
       try {
         // Create transaction record
-        const transaction = await prisma.transaction.create({
+        await prisma.transaction.create({
           data: {
             userId,
             amount: session.amount_total || 0,
