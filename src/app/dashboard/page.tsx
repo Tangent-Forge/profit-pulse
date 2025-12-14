@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Zap, Plus, Trash2, Download, BarChart3, Calendar, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Zap, Plus, Trash2, Download, BarChart3, Calendar, TrendingUp, GitCompare } from 'lucide-react';
 import { getInterpretationText, getScoreColor } from '@/lib/calculations';
 import { generateMarkdownExport, generateCSVExport, downloadFile } from '@/lib/export';
 
@@ -129,6 +129,13 @@ export default function DashboardPage() {
                   Export ({selectedIds.size})
                 </button>
               )}
+              <Link
+                href="/compare"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--tf-steel-gray)] hover:bg-[var(--tf-deep-charcoal)] text-white rounded-lg transition-all"
+              >
+                <GitCompare size={18} />
+                Compare
+              </Link>
               <Link
                 href="/evaluate/full"
                 className="flex items-center gap-2 px-4 py-2 bg-[var(--tf-forge-orange)] hover:bg-[var(--tf-ember-glow)] text-white font-medium rounded-lg transition-all"

@@ -264,3 +264,272 @@ export function downloadFile(content: string, filename: string, mimeType: string
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Generate PDF export of evaluation
+ * Uses jsPDF for client-side PDF generation
+ */
+export async function generatePDFExport(
+  input: FullEvaluationInput,
+  result: FullEvaluationResult,
+  suggestions?: ImprovementSuggestion[]
+): Promise<void> {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF();
+  
+  let y = 20;
+  const lineHeight = 7;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  const maxWidth = pageWidth - margin * 2;
+
+  const addText = (text: string, fontSize: number = 10, isBold: boolean = false) => {
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+    const lines = doc.splitTextToSize(text, maxWidth);
+    lines.forEach((line: string) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, margin, y);
+      y += lineHeight;
+    });
+  };
+
+  const addSection = (title: string) => {
+    y += 5;
+    addText(title, 14, true);
+    y += 2;
+  };
+
+  // Header
+  doc.setFillColor(45, 45, 45);
+  doc.rect(0, 0, pageWidth, 40, 'F');
+  doc.setTextColor(255, 140, 0);
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Profit Pulse', margin, 25);
+  doc.setTextColor(200, 200, 200);
+  doc.setFontSize(12);
+  doc.text('Evaluation Report', margin, 35);
+  
+  y = 55;
+  doc.setTextColor(0, 0, 0);
+
+  // Idea Info
+  addText(`Idea: ${input.ideaName}`, 16, true);
+  addText(`Category: ${getCategoryDisplayName(input.category)}`, 11);
+  addText(`Evaluated: ${new Date(result.evaluatedAt).toLocaleDateString()}`, 10);
+  y += 5;
+
+  // Overall Score Box
+  const scoreColor = result.interpretation === 'exceptional' ? [34, 197, 94] :
+                     result.interpretation === 'strong' ? [255, 140, 0] :
+                     result.interpretation === 'moderate' ? [234, 179, 8] : [239, 68, 68];
+  doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+  doc.roundedRect(margin, y, 50, 25, 3, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${result.overallScore}`, margin + 10, y + 17);
+  doc.setFontSize(10);
+  doc.text('/10', margin + 32, y + 17);
+  
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  doc.text(getInterpretationText(result.interpretation), margin + 60, y + 15);
+  y += 35;
+
+  // Layer Breakdown
+  addSection('Layer Breakdown');
+  const layers = [
+    { name: 'Founder Readiness', pct: result.layers.founderReadiness.percentage, weight: '30%' },
+    { name: 'Idea Characteristics', pct: result.layers.ideaCharacteristics.percentage, weight: '40%' },
+    { name: 'Historical Patterns', pct: result.layers.historicalPatterns.percentage, weight: '20%' },
+    { name: 'Contextual Viability', pct: result.layers.contextualViability.percentage, weight: '10%' },
+  ];
+  
+  layers.forEach(layer => {
+    doc.setFontSize(10);
+    doc.text(`${layer.name} (${layer.weight})`, margin, y);
+    // Progress bar
+    doc.setFillColor(230, 230, 230);
+    doc.roundedRect(margin + 70, y - 4, 80, 6, 1, 1, 'F');
+    const barColor = layer.pct >= 70 ? [34, 197, 94] : layer.pct >= 50 ? [255, 140, 0] : [239, 68, 68];
+    doc.setFillColor(barColor[0], barColor[1], barColor[2]);
+    doc.roundedRect(margin + 70, y - 4, (layer.pct / 100) * 80, 6, 1, 1, 'F');
+    doc.text(`${layer.pct}%`, margin + 155, y);
+    y += 10;
+  });
+  y += 5;
+
+  // Energy Filter
+  addSection('Energy Filter');
+  const filterColor = result.energyFilterStatus === 'pass' ? [34, 197, 94] :
+                      result.energyFilterStatus === 'fail' ? [239, 68, 68] : [234, 179, 8];
+  doc.setTextColor(filterColor[0], filterColor[1], filterColor[2]);
+  addText(`Status: ${result.energyFilterStatus.toUpperCase()}`, 11, true);
+  doc.setTextColor(100, 100, 100);
+  addText(result.energyFilterReasoning, 10);
+  doc.setTextColor(0, 0, 0);
+  y += 3;
+
+  // Strengths
+  if (result.strengths.length > 0) {
+    addSection('Strengths');
+    result.strengths.forEach(strength => {
+      addText(`✓ ${strength}`, 10);
+    });
+  }
+
+  // Gaps
+  if (result.gaps.length > 0) {
+    addSection('Gaps to Address');
+    result.gaps.forEach(gap => {
+      const icon = gap.type === 'critical' ? '●' : gap.type === 'warning' ? '◐' : '○';
+      addText(`${icon} ${gap.description}`, 10, true);
+      addText(`   Action: ${gap.action}`, 9);
+      y += 2;
+    });
+  }
+
+  // Improvement Suggestions
+  if (suggestions && suggestions.length > 0) {
+    addSection('Improvement Suggestions');
+    suggestions.slice(0, 3).forEach((suggestion, i) => {
+      addText(`${i + 1}. ${suggestion.title}`, 10, true);
+      addText(`   ${suggestion.action}`, 9);
+      addText(`   Potential gain: +${suggestion.potentialScoreGain.toFixed(1)} points`, 9);
+      y += 2;
+    });
+  }
+
+  // Footer
+  doc.setFillColor(45, 45, 45);
+  doc.rect(0, 280, pageWidth, 20, 'F');
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(8);
+  doc.text('Generated by Profit Pulse — A Tangent Forge Product', margin, 290);
+  doc.text('profitpulse.tangentforge.com', pageWidth - margin - 50, 290);
+
+  // Download
+  doc.save(`${input.ideaName.replace(/[^a-z0-9]/gi, '-')}-evaluation.pdf`);
+}
+
+/**
+ * Generate Notion page content for export
+ */
+export function generateNotionExport(
+  input: FullEvaluationInput,
+  result: FullEvaluationResult,
+  suggestions?: ImprovementSuggestion[]
+): {
+  title: string;
+  properties: Record<string, unknown>;
+  children: Array<{ type: string; [key: string]: unknown }>;
+} {
+  return {
+    title: input.ideaName,
+    properties: {
+      'Score': { number: result.overallScore },
+      'Category': { select: { name: getCategoryDisplayName(input.category) } },
+      'Status': { select: { name: result.interpretation } },
+      'Energy Filter': { select: { name: result.energyFilterStatus } },
+      'Evaluated': { date: { start: new Date(result.evaluatedAt).toISOString().split('T')[0] } },
+    },
+    children: [
+      {
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [{ type: 'text', text: { content: 'Overall Score' } }],
+        },
+      },
+      {
+        type: 'callout',
+        callout: {
+          icon: { emoji: result.interpretation === 'exceptional' ? '🚀' : result.interpretation === 'strong' ? '💪' : result.interpretation === 'moderate' ? '⚡' : '⚠️' },
+          rich_text: [{ type: 'text', text: { content: `${result.overallScore}/10 — ${getInterpretationText(result.interpretation)}` } }],
+        },
+      },
+      {
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [{ type: 'text', text: { content: 'Layer Breakdown' } }],
+        },
+      },
+      {
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: `Founder Readiness: ${result.layers.founderReadiness.percentage}%` } }],
+        },
+      },
+      {
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: `Idea Characteristics: ${result.layers.ideaCharacteristics.percentage}%` } }],
+        },
+      },
+      {
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: `Historical Patterns: ${result.layers.historicalPatterns.percentage}%` } }],
+        },
+      },
+      {
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: `Contextual Viability: ${result.layers.contextualViability.percentage}%` } }],
+        },
+      },
+      {
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [{ type: 'text', text: { content: 'Strengths' } }],
+        },
+      },
+      ...result.strengths.map(strength => ({
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: `✅ ${strength}` } }],
+        },
+      })),
+      {
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [{ type: 'text', text: { content: 'Gaps to Address' } }],
+        },
+      },
+      ...result.gaps.map(gap => ({
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: `${gap.type === 'critical' ? '🔴' : gap.type === 'warning' ? '🟠' : '🟡'} ${gap.description}: ${gap.action}` } }],
+        },
+      })),
+      ...(suggestions && suggestions.length > 0 ? [
+        {
+          type: 'heading_2',
+          heading_2: {
+            rich_text: [{ type: 'text', text: { content: 'Improvement Suggestions' } }],
+          },
+        },
+        ...suggestions.map(s => ({
+          type: 'bulleted_list_item',
+          bulleted_list_item: {
+            rich_text: [{ type: 'text', text: { content: `${s.priority === 'high' ? '🔥' : s.priority === 'medium' ? '⚡' : '💡'} ${s.title}: ${s.action}` } }],
+          },
+        })),
+      ] : []),
+      {
+        type: 'divider',
+        divider: {},
+      },
+      {
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ type: 'text', text: { content: 'Generated by Profit Pulse — A Tangent Forge Product' }, annotations: { italic: true, color: 'gray' } }],
+        },
+      },
+    ],
+  };
+}

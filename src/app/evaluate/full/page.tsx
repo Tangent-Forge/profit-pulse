@@ -6,7 +6,7 @@ import {
   Zap, TrendingUp, CheckCircle, ArrowRight, AlertCircle, ArrowLeft,
   User, Clock, DollarSign, Target, History, Calendar, Heart,
   AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp,
-  Download, Save, Lightbulb, Copy, FileText
+  Download, Save, Lightbulb, Copy, FileText, Sparkles
 } from 'lucide-react';
 import {
   FullEvaluationInput,
@@ -23,7 +23,8 @@ import {
 } from '@/lib/calculations';
 import { getAllCategories } from '@/lib/failureModes';
 import { generateImprovementSuggestions, calculatePotentialScore, generatePivotSuggestion, ImprovementSuggestion } from '@/lib/improvements';
-import { generateMarkdownExport, downloadFile } from '@/lib/export';
+import { generateMarkdownExport, generatePDFExport, downloadFile } from '@/lib/export';
+import { analyzeIdea, AIIdeaAnalysis } from '@/lib/openai';
 
 const CATEGORIES = getAllCategories();
 
@@ -68,6 +69,9 @@ export default function FullEvaluatePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<AIIdeaAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showAiInsights, setShowAiInsights] = useState(false);
 
   const steps = [
     { id: 'basics', title: 'Idea Basics', icon: Target },
@@ -131,6 +135,27 @@ export default function FullEvaluatePage() {
     await navigator.clipboard.writeText(markdown);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const handleExportPDF = async () => {
+    if (!result) return;
+    await generatePDFExport(formData, result, suggestions);
+  };
+
+  const handleAIAnalysis = async () => {
+    if (!formData.ideaName || !formData.description) return;
+    setIsAnalyzing(true);
+    try {
+      const analysis = await analyzeIdea(formData.ideaName, formData.description);
+      if (analysis) {
+        setAiAnalysis(analysis);
+        setShowAiInsights(true);
+      }
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleReset = () => {
@@ -260,6 +285,13 @@ export default function FullEvaluatePage() {
                   {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save to Dashboard'}
                 </button>
                 <button
+                  onClick={handleExportPDF}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--tf-forge-orange)] hover:bg-[var(--tf-ember-glow)] text-white rounded-lg transition-all"
+                >
+                  <FileText size={18} />
+                  Export PDF
+                </button>
+                <button
                   onClick={handleExportMarkdown}
                   className="flex items-center gap-2 px-4 py-2 bg-[var(--tf-steel-gray)] hover:bg-[var(--tf-deep-charcoal)] text-white rounded-lg transition-all"
                 >
@@ -273,7 +305,82 @@ export default function FullEvaluatePage() {
                   <Copy size={18} />
                   {copySuccess ? 'Copied!' : 'Copy Report'}
                 </button>
+                <button
+                  onClick={handleAIAnalysis}
+                  disabled={isAnalyzing}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg transition-all disabled:opacity-50"
+                >
+                  <Sparkles size={18} />
+                  {isAnalyzing ? 'Analyzing...' : '🤖 AI Insights'}
+                </button>
               </div>
+
+              {/* AI Insights Panel */}
+              {showAiInsights && aiAnalysis && (
+                <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-purple-500/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <Sparkles className="text-purple-400" size={24} />
+                      AI Analysis
+                    </h3>
+                    <button
+                      onClick={() => setShowAiInsights(false)}
+                      className="text-[var(--tf-muted-steel)] hover:text-white"
+                    >
+                      <XCircle size={20} />
+                    </button>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-300 mb-2">Suggested Category</h4>
+                      <p className="text-white">{getCategoryDisplayName(aiAnalysis.suggestedCategory)}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-300 mb-2">Target Audience</h4>
+                      <p className="text-[var(--tf-smoked-gray)]">{aiAnalysis.targetAudience}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-300 mb-2">Unique Value Proposition</h4>
+                      <p className="text-[var(--tf-smoked-gray)]">{aiAnalysis.uniqueValueProposition}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-300 mb-2">Market Validation</h4>
+                      <p className="text-[var(--tf-smoked-gray)]">{aiAnalysis.marketValidation}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-300 mb-2">Competitors</h4>
+                      <ul className="space-y-1">
+                        {aiAnalysis.competitors.map((comp, i) => (
+                          <li key={i} className="text-[var(--tf-smoked-gray)] text-sm">• {comp}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-300 mb-2">Potential Risks</h4>
+                      <ul className="space-y-1">
+                        {aiAnalysis.potentialRisks.map((risk, i) => (
+                          <li key={i} className="text-[var(--tf-smoked-gray)] text-sm">⚠️ {risk}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className="text-sm font-bold text-purple-300 mb-2">Quick Wins</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {aiAnalysis.quickWins.map((win, i) => (
+                        <span key={i} className="px-3 py-1 bg-purple-500/20 text-purple-200 rounded-full text-sm">
+                          ✨ {win}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Strengths */}
