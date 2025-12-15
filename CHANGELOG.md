@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - AI-Powered Free Tier
+- **Free tier AI analysis** using cost-optimized Groq provider (~$0.00005 per request)
+- Target audience identification powered by AI
+- 3 quick validation steps generated per idea
+- Quick win action recommendations
+- Top risk identification with specific warnings
+- Category auto-suggestion based on idea description
+- Intelligent upgrade teasers to drive conversion
+- Multi-provider AI support (OpenAI, Anthropic, Groq, Together AI)
+- Separate free/paid tier AI provider configuration
+- AI Configuration Guide with cost comparison and setup instructions
+- Free tier API endpoint (`/api/evaluate/free`) with AI integration
+- Enhanced evaluation UI with AI insights display
+- Loading states and error handling for AI requests
+
 ### Added - Production Readiness
 - Input validation schemas for all API routes using Zod
 - Webhook event tracking table (WebhookEvent) for idempotency
@@ -36,6 +51,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Strengths/gaps/obstacles generation
 - Multi-step evaluation wizard UI
 - Promo code support in checkout
+
+### Changed - AI & Free Tier
+- **Free tier now provides real value** - AI-powered insights instead of just math
+- Evaluation page title changed to "Free AI-Powered Idea Analysis"
+- Results page shows AI insights (audience, validation, risks, quick wins)
+- Upgrade CTA updated to emphasize "THE WHY, PITFALLS & PLAN" differentiation
+- CTA messaging now clearly lists what's missing from free tier
+- Free tier button changed to "Get Free AI-Powered Analysis"
+- Added "AI-powered insights in seconds" to free tier messaging
+- Environment variables expanded with AI provider configuration
+- `chatCompletion()` now accepts optional `provider` parameter for testing
 
 ### Changed - Security & Reliability
 - Updated Next.js from 16.0.8 to 16.0.10 (fixes 2 HIGH severity vulnerabilities)
