@@ -27,11 +27,15 @@ Profit Pulse is a business idea evaluation framework that helps founders cut thr
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router, Turbopack)
+- **Framework**: Next.js 16.0.10 (App Router, Turbopack)
 - **Styling**: Tailwind CSS 4
 - **Database**: PostgreSQL via Prisma ORM
-- **Auth**: NextAuth.js
+- **Auth**: NextAuth.js with custom pages
 - **Payments**: Stripe
+- **Testing**: Jest + React Testing Library + Playwright
+- **Error Tracking**: Sentry
+- **Performance**: Web Vitals monitoring
+- **Rate Limiting**: Upstash Redis
 - **Deployment**: Netlify
 
 ## Getting Started
@@ -85,42 +89,109 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 npm run dev
 
 # Run database migrations
-npx prisma migrate dev
+npm run db:migrate
 
 # Open Prisma Studio (database GUI)
-npx prisma studio
+npm run db:studio
+
+# Run tests
+npm test                 # Unit tests
+npm run test:e2e         # E2E tests
+npm run test:coverage    # Coverage report
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+### Testing
+
+```bash
+# Unit tests
+npm test
+npm run test:watch       # Watch mode
+npm run test:coverage    # Coverage report
+
+# E2E tests (Playwright)
+npm run playwright:install   # Install browsers (first time)
+npm run test:e2e            # Run E2E tests
+npm run test:e2e:ui         # Run with UI mode
+```
+
+See [Testing Guide](docs/TESTING_GUIDE.md) for more details.
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes
-│   │   ├── auth/          # NextAuth endpoints
-│   │   ├── checkout/      # Stripe checkout
-│   │   └── webhook/       # Stripe webhooks
-│   ├── dashboard/         # User dashboard
-│   ├── evaluate/          # QPV Calculator
-│   └── success/           # Payment success
-├── lib/                   # Utilities
-│   ├── calculations.ts    # QPV scoring engine
-│   ├── failureModes.ts    # Category failure data
-│   ├── auth.ts            # NextAuth config
-│   ├── db.ts              # Prisma client
-│   └── stripe.ts          # Stripe config
-├── types/                 # TypeScript definitions
-└── prisma/
-    └── schema.prisma      # Database schema
+├── app/                        # Next.js App Router pages
+│   ├── api/                   # API routes
+│   │   ├── auth/              # Authentication (NextAuth + signup)
+│   │   ├── checkout/          # Stripe checkout
+│   │   ├── ideas/             # Ideas CRUD
+│   │   ├── webhook/           # Stripe webhooks (with idempotency)
+│   │   ├── health/            # Health check endpoint
+│   │   └── analytics/         # Web Vitals endpoint
+│   ├── auth/                  # Custom auth pages
+│   │   ├── signin/            # Sign-in page
+│   │   └── signup/            # Sign-up page
+│   ├── dashboard/             # User dashboard
+│   ├── evaluate/              # QPV Calculator
+│   ├── error.tsx              # Error boundary
+│   ├── loading.tsx            # Loading state
+│   └── global-error.tsx       # Global error handler
+├── lib/                       # Utilities
+│   ├── calculations.ts        # QPV scoring engine
+│   ├── failureModes.ts        # Category failure data
+│   ├── validations.ts         # Zod validation schemas
+│   ├── ratelimit.ts           # Rate limiting logic
+│   ├── auth.ts                # NextAuth config
+│   ├── db.ts                  # Prisma client
+│   ├── stripe.ts              # Stripe config
+│   └── __tests__/             # Unit tests
+├── components/                # React components
+│   └── web-vitals.tsx         # Performance monitoring
+├── middleware.ts              # Global middleware (rate limiting)
+├── types/                     # TypeScript definitions
+├── e2e/                       # Playwright E2E tests
+├── prisma/
+│   ├── schema.prisma          # Database schema
+│   └── migrations/            # Database migrations
+└── docs/                      # Documentation
+    ├── PRODUCTION_DEPLOYMENT.md
+    └── TESTING_GUIDE.md
 ```
+
+## Production Features
+
+### Security
+- ✅ Zero npm vulnerabilities
+- ✅ Input validation on all API routes (Zod)
+- ✅ Rate limiting (in-memory dev, Redis production)
+- ✅ Webhook idempotency (prevents duplicate charges)
+- ✅ Environment variable validation
+- ✅ CSRF protection via NextAuth
+
+### Reliability
+- ✅ Database transactions for payment processing
+- ✅ Health check endpoint (`/api/health`)
+- ✅ Error boundaries and global error handling
+- ✅ Graceful loading states
+- ✅ Web Vitals performance monitoring
+
+### Testing
+- ✅ 35+ unit tests (Jest + React Testing Library)
+- ✅ E2E tests (Playwright)
+- ✅ Accessibility testing (@axe-core)
+
+### Monitoring
+- ✅ Sentry error tracking (optional)
+- ✅ Web Vitals analytics
+- ✅ Webhook event logging
 
 ## Deployment
 
-### Netlify (Recommended)
+See the comprehensive [Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md) for detailed instructions.
 
-The app is configured for Netlify deployment with the `@netlify/plugin-nextjs` plugin.
+### Quick Deploy (Netlify)
 
 ```bash
 # Install Netlify CLI
@@ -133,18 +204,22 @@ netlify link
 netlify deploy --prod
 ```
 
-**Important**: The `prebuild` script automatically runs `prisma generate` before each build to ensure the Prisma client is up to date.
+### Required Environment Variables
 
-### Environment Variables on Netlify
+See `.env.example` for full list. Critical variables:
 
-Set these in **Site settings > Environment variables**:
+- `DATABASE_URL` — PostgreSQL connection
+- `NEXTAUTH_SECRET` — Min 32 characters
+- `NEXTAUTH_URL` — Your production URL
+- `STRIPE_SECRET_KEY` — Stripe secret key
+- `STRIPE_WEBHOOK_SECRET` — Webhook signing secret
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Stripe publishable key
 
-- `DATABASE_URL`
-- `NEXTAUTH_URL` (your production URL)
-- `NEXTAUTH_SECRET`
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+### Optional (Recommended)
+
+- `NEXT_PUBLIC_SENTRY_DSN` — Error tracking
+- `UPSTASH_REDIS_REST_URL` — Rate limiting (production)
+- `UPSTASH_REDIS_REST_TOKEN` — Rate limiting token
 
 ## Related Projects
 
