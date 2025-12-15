@@ -72,8 +72,8 @@ export default function DashboardPage() {
     const exportData = selectedIdeas
       .filter(idea => idea.evaluation?.result && idea.evaluation?.input)
       .map(idea => ({
-        input: idea.evaluation!.input as Parameters<typeof generateMarkdownExport>[0],
-        result: idea.evaluation!.result as Parameters<typeof generateMarkdownExport>[1],
+        input: idea.evaluation!.input as unknown as Parameters<typeof generateMarkdownExport>[0],
+        result: idea.evaluation!.result as unknown as Parameters<typeof generateMarkdownExport>[1],
       }));
 
     if (exportData.length > 0) {
