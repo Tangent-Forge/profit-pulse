@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { createIdeaSchema, validateRequest, formatValidationError } from '@/lib/validations';
 
 // GET /api/ideas - Get all ideas for the current user
 export async function GET() {
@@ -34,7 +35,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -43,14 +44,20 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { title, description, category, qpvScore, evaluation } = body;
 
-    if (!title) {
+    // Validate request body
+    const validation = validateRequest(createIdeaSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Title is required' },
+        {
+          error: 'Invalid request data',
+          details: formatValidationError(validation.error)
+        },
         { status: 400 }
       );
     }
+
+    const { title, description, category, qpvScore, evaluation } = validation.data;
 
     const idea = await prisma.idea.create({
       data: {

@@ -144,3 +144,19 @@ model ApiKey {
 
   @@index([userId])
 }
+
+// Webhook event tracking for idempotency
+model WebhookEvent {
+  id           String   @id @default(cuid())
+  eventId      String   @unique // Stripe event ID
+  eventType    String
+  processed    Boolean  @default(false)
+  processedAt  DateTime?
+  payload      Json?    // Store full event payload for debugging
+  error        String?  // Store error message if processing failed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([processed])
+}

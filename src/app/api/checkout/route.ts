@@ -2,17 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { stripe, getTierByPriceId } from '@/lib/stripe';
+import { checkoutRequestSchema, validateRequest, formatValidationError } from '@/lib/validations';
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId } = await req.json();
+    const body = await req.json();
 
-    if (!priceId) {
+    // Validate request body
+    const validation = validateRequest(checkoutRequestSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Price ID is required' },
+        {
+          error: 'Invalid request data',
+          details: formatValidationError(validation.error)
+        },
         { status: 400 }
       );
     }
+
+    const { priceId } = validation.data;
 
     // Get the tier information
     const tier = getTierByPriceId(priceId);
