@@ -1,0 +1,2 @@
+# This file ensures the migrations directory is tracked in git
+# Actual migration files will be created when you run: npx prisma migrate dev --name initial_schema

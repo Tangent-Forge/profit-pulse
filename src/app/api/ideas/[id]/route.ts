@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { updateIdeaSchema, validateRequest, formatValidationError } from '@/lib/validations';
 
 // GET /api/ideas/[id] - Get a specific idea
 export async function GET(
@@ -60,7 +61,20 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { title, description, qpvScore, evaluation, blueprint } = body;
+
+    // Validate request body
+    const validation = validateRequest(updateIdeaSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid request data',
+          details: formatValidationError(validation.error)
+        },
+        { status: 400 }
+      );
+    }
+
+    const { title, description, qpvScore, evaluation, blueprint } = validation.data;
 
     const idea = await prisma.idea.updateMany({
       where: {

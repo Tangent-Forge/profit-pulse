@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added - Production Readiness
+- Input validation schemas for all API routes using Zod
+- Webhook event tracking table (WebhookEvent) for idempotency
+- Rate limiting middleware with Upstash/Redis support
+- Health check endpoint (`/api/health`) for monitoring
+- Comprehensive test suite with Jest + React Testing Library
+- Database migration framework with documentation
+- Production deployment guide (`docs/PRODUCTION_DEPLOYMENT.md`)
+- Middleware for global rate limiting
+- API request validation with detailed error messages
+
+### Added - Features
 - Full 4-layer evaluation system (Profit Pulse 2.0)
 - Founder Readiness layer (30% weight)
 - Contextual Viability layer (10% weight)
@@ -18,9 +29,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-step evaluation wizard UI
 - Promo code support in checkout
 
-### Changed
-- Updated checkout to include invoice creation
-- Added session expiry (30 minutes) to checkout
+### Changed - Security & Reliability
+- Updated Next.js from 16.0.8 to 16.0.10 (fixes 2 HIGH severity vulnerabilities)
+- Updated jsPDF from 2.5.2 to 3.0.4 (fixes HIGH severity vulnerabilities)
+- Environment variables now required in production (DATABASE_URL, NEXTAUTH_SECRET, etc.)
+- Webhook processing now uses database transactions for atomicity
+- Removed custom auth pages (using NextAuth defaults until custom pages are built)
+- All API endpoints now validate input before processing
+
+### Changed - Developer Experience
+- Added database management scripts (db:migrate, db:studio, etc.)
+- Added test scripts (test, test:watch, test:coverage)
+- Environment validation enforces 32+ character secrets in production
+- Added migration README with troubleshooting guide
+
+### Fixed
+- Webhook idempotency - prevents duplicate credit grants on retries
+- Database connection handling in webhook routes
+- Environment variable validation (now enforced in production)
+- Auth configuration (removed broken custom page references)
+- Missing rate limit protection on API routes
+
+### Security
+- All npm vulnerabilities resolved (0 vulnerabilities)
+- Input validation prevents malformed data and injection attacks
+- Rate limiting prevents brute force and spam
+- Webhook event deduplication prevents double-charging
+- Database transactions ensure credit grant atomicity
 
 ## [0.2.0] - 2025-12-14
 

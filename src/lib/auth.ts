@@ -28,11 +28,12 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt', // Use JSON Web Tokens for session management
   },
-  pages: {
-    signIn: '/auth/signin', // Custom sign-in page
-    signOut: '/auth/signout',
-    error: '/auth/error',
-  },
+  // Using NextAuth default pages - custom pages can be added later
+  // pages: {
+  //   signIn: '/auth/signin',
+  //   signOut: '/auth/signout',
+  //   error: '/auth/error',
+  // },
   providers: [
     // Email/Password Authentication
     CredentialsProvider({
