@@ -12,18 +12,19 @@ Profit Pulse is a business idea evaluation framework that helps founders cut thr
 
 ### Features
 
-- **Free QPV Calculator** — Weighted scoring (Q×40% + P×30% + V×30%) with instant interpretation
+- **Free AI-Powered Analysis** — QPV scoring + AI-generated insights on target audience, validation steps, risks, and quick wins (no signup required)
 - **Multi-Layer Evaluation** — 4-layer analysis covering founder readiness, idea characteristics, historical patterns, and contextual viability
 - **Failure Mode Detection** — Category-specific failure rates and mitigation strategies
+- **Multi-Provider AI** — Supports OpenAI, Anthropic (Claude), Groq, and Together AI with easy configuration
 - **Execution Blueprints** — Actionable plans with validation checkpoints
 
 ### Pricing Tiers
 
 | Tier | Price | Features |
 |------|-------|----------|
-| Free QPV | $0 | Quick score, instant results, no signup |
-| Starter | $9 | 1 full evaluation, 1 blueprint, failure analysis |
-| Explorer | $29 | 5 evaluations, 2 blueprints, comparison tools |
+| Free | $0 | QPV score + AI insights (audience, validation, risks, quick wins), no signup |
+| Starter | $9 | Full 4-layer evaluation, failure mode analysis, execution blueprint |
+| Explorer | $29 | 5 evaluations, 2 blueprints, comparison tools, historical patterns |
 
 ## Tech Stack
 
@@ -32,6 +33,7 @@ Profit Pulse is a business idea evaluation framework that helps founders cut thr
 - **Database**: PostgreSQL via Prisma ORM
 - **Auth**: NextAuth.js with custom pages
 - **Payments**: Stripe
+- **AI**: Multi-provider support (OpenAI, Anthropic, Groq, Together AI)
 - **Testing**: Jest + React Testing Library + Playwright
 - **Error Tracking**: Sentry
 - **Performance**: Web Vitals monitoring
@@ -80,7 +82,15 @@ NEXTAUTH_SECRET="your-secret-key"
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+
+# AI Providers (choose based on cost/quality needs)
+AI_PROVIDER=openai              # For paid features (openai|anthropic|groq|together)
+AI_FREE_TIER_PROVIDER=groq      # For free tier (defaults to groq for cost efficiency)
+GROQ_API_KEY="gsk_..."          # Recommended for free tier (~$0.00005/request)
+OPENAI_API_KEY="sk-proj-..."    # Optional, for paid tier
 ```
+
+See [AI Configuration Guide](./docs/AI_CONFIGURATION.md) for detailed provider setup and cost comparison.
 
 ### Development
 

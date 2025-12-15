@@ -38,6 +38,7 @@ export const env = createEnv({
     GROQ_API_KEY: z.string().optional(),
     TOGETHER_API_KEY: z.string().optional(),
     AI_PROVIDER: z.enum(['openai', 'anthropic', 'groq', 'together']).default('openai'),
+    AI_FREE_TIER_PROVIDER: z.enum(['openai', 'anthropic', 'groq', 'together']).default('groq'),
 
     // Database direct URL for migrations
     DIRECT_URL: z.string().url().optional(),
@@ -72,6 +73,7 @@ export const env = createEnv({
     GROQ_API_KEY: process.env.GROQ_API_KEY,
     TOGETHER_API_KEY: process.env.TOGETHER_API_KEY,
     AI_PROVIDER: process.env.AI_PROVIDER,
+    AI_FREE_TIER_PROVIDER: process.env.AI_FREE_TIER_PROVIDER,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,

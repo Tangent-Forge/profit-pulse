@@ -30,6 +30,11 @@ const getProvider = (): AIProvider => {
   return (process.env.AI_PROVIDER as AIProvider) || 'openai';
 };
 
+// Get provider for free tier (defaults to Groq for cost efficiency)
+const getFreeTierProvider = (): AIProvider => {
+  return (process.env.AI_FREE_TIER_PROVIDER as AIProvider) || 'groq';
+};
+
 // Initialize clients lazily
 let openaiClient: OpenAI | null = null;
 let anthropicClient: Anthropic | null = null;
@@ -82,9 +87,9 @@ const MODELS = {
 async function chatCompletion(
   systemPrompt: string,
   userPrompt: string,
-  options: { json?: boolean; quality?: boolean } = {}
+  options: { json?: boolean; quality?: boolean; provider?: AIProvider } = {}
 ): Promise<string | null> {
-  const provider = getProvider();
+  const provider = options.provider || getProvider();
   const modelTier = options.quality ? 'quality' : 'fast';
 
   try {
@@ -176,6 +181,20 @@ export interface AIIdeaAnalysis {
 }
 
 /**
+ * Free tier analysis - lightweight, actionable insights
+ * Optimized for cost-effectiveness (uses Groq by default)
+ */
+export interface FreeAnalysis {
+  suggestedCategory: IdeaCategory;
+  categoryReason: string;
+  targetAudience: string;
+  validationSteps: string[];
+  topRisk: string;
+  quickWin: string;
+  upgradeTeaser: string;
+}
+
+/**
  * Analyze an idea description using AI
  */
 export async function analyzeIdea(
@@ -227,6 +246,75 @@ Provide analysis in this exact JSON format:
     return analysis;
   } catch (error) {
     console.error('AI analysis error:', error);
+    return null;
+  }
+}
+
+/**
+ * Free tier analysis - Cost-optimized, actionable feedback
+ * Uses Groq by default (~$0.00005 per request)
+ * Provides basic context without deep strategic insights
+ */
+export async function analyzeFreeIdea(
+  ideaName: string,
+  description: string,
+  qpvScore: number
+): Promise<FreeAnalysis | null> {
+  const freeTierProvider = getFreeTierProvider();
+
+  const systemPrompt = `You are a business idea analyst providing quick, actionable feedback.
+Keep responses concise and practical. Focus on immediate next steps.
+
+Categories:
+- ai-wrapper: AI tools built on APIs (ChatGPT wrappers, etc)
+- saas-tool: Software as a Service products
+- micro-saas: Small, focused SaaS products
+- notion-template: Notion templates
+- digital-product: Digital downloads, tools, assets
+- newsletter: Email newsletters
+- content-creator: YouTube, TikTok, podcasts
+- community: Paid communities, memberships
+- marketplace: Two-sided marketplaces
+- info-product: Courses, ebooks, guides
+- agency-service: Service agencies
+- consulting: Consulting services
+- productized-service: Packaged services with fixed scope
+- ecommerce: Physical or digital product stores
+- mobile-app: Mobile applications
+- chrome-extension: Browser extensions
+- other: Doesn't fit other categories`;
+
+  const userPrompt = `Analyze this business idea briefly:
+
+Name: ${ideaName}
+Description: ${description}
+QPV Score: ${qpvScore}/10
+
+Provide quick analysis in this JSON format:
+{
+  "suggestedCategory": "best matching category",
+  "categoryReason": "one sentence why this category fits",
+  "targetAudience": "specific 1-2 sentence description of ideal customer",
+  "validationSteps": ["step1", "step2", "step3"],
+  "topRisk": "single biggest risk to watch (1 sentence)",
+  "quickWin": "one immediate action they can take today (1 sentence)",
+  "upgradeTeaser": "one intriguing question about failure modes or pitfalls they should explore (1 sentence, make them curious)"
+}
+
+Keep each field concise. Validation steps should be immediate, actionable tests.`;
+
+  try {
+    const content = await chatCompletion(systemPrompt, userPrompt, {
+      json: true,
+      provider: freeTierProvider
+    });
+
+    if (!content) return null;
+
+    const analysis = JSON.parse(content) as FreeAnalysis;
+    return analysis;
+  } catch (error) {
+    console.error('Free tier AI analysis error:', error);
     return null;
   }
 }
