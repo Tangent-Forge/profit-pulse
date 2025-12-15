@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Zap, TrendingUp, CheckCircle, ArrowRight, AlertCircle, ArrowLeft, Target, Lightbulb, AlertTriangle, Loader2 } from 'lucide-react';
-import { BasicQPVInput } from '@/types';
+import { BasicQPVInput, QPVInterpretation } from '@/types';
 import { getInterpretationText, getScoreColor, getScoreGradient, getCategoryDisplayName } from '@/lib/calculations';
 import { FreeAnalysis } from '@/lib/openai';
 
 interface EvaluationResult {
   qpv: {
     score: number;
-    interpretation: string;
+    interpretation: QPVInterpretation;
     failureTeaser: string;
   };
   ai: FreeAnalysis | null;

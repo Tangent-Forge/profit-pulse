@@ -104,9 +104,8 @@ export async function rateLimit(
 ): Promise<NextResponse | null> {
   // Get identifier (IP address or user ID from session)
   const identifier =
-    req.headers.get('x-forwarded-for') ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     req.headers.get('x-real-ip') ||
-    req.ip ||
     'unknown';
 
   try {
