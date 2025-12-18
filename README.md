@@ -4,6 +4,8 @@
 
 The only idea evaluation tool that tells you why ideas like yours fail — and how to avoid it.
 
+> ✨ Now with AI-powered free tier analysis
+
 [![Netlify Status](https://api.netlify.com/api/v1/badges/5c798f4b-5f16-4457-8783-c7adc4d0a7a1/deploy-status)](https://app.netlify.com/sites/profit-pulse-app/deploys)
 
 ## Overview
